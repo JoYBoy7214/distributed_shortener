@@ -40,6 +40,7 @@ func postSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := client.CreateShortUrl(r.Context(), &shortRequest)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	var response ShortUrlResponse
 	response.ShortUrl = res.ShortUrl
@@ -75,6 +76,7 @@ func main() {
 	conn, err := grpc.NewClient(":50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal("error in creating a grpc client", err)
+		return
 	}
 	defer conn.Close()
 	client = pb.NewShortenerClient(conn)
