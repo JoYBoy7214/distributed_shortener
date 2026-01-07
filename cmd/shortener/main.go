@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net"
+	"os"
 
 	pb "github.com/JoYBoy7214/distributed_shortener/api/proto/v1"
 	service "github.com/JoYBoy7214/distributed_shortener/internal/shortener"
@@ -11,13 +12,14 @@ import (
 	"google.golang.org/grpc"
 )
 
-const dbUrl = "postgres://ZORO:secretfornow@localhost:5432/shortener"
+var dbUrl string
 
 func main() {
 	ln, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatal("failed to listen on 50051", err)
 	}
+	dbUrl = os.Getenv("DB_URL")
 	s := grpc.NewServer()
 	pool, err := pgxpool.New(context.Background(), dbUrl)
 	server := service.NewService(pool)
