@@ -2,12 +2,14 @@ package shortener
 
 import (
 	"context"
+	"log"
 	"math/rand"
 	"strings"
 	"time"
 
 	pb "github.com/JoYBoy7214/distributed_shortener/api/proto/v1"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -15,11 +17,13 @@ import (
 type Service struct {
 	pb.UnimplementedShortenerServer
 	pool *pgxpool.Pool
+	rdb  *redis.Client
 }
 
-func NewService(pool *pgxpool.Pool) *Service {
+func NewService(pool *pgxpool.Pool, rdb *redis.Client) *Service {
 	return &Service{
 		pool: pool,
+		rdb:  rdb,
 	}
 }
 func (s *Service) CreateUrlTable() error {
@@ -27,6 +31,7 @@ func (s *Service) CreateUrlTable() error {
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to create the url table")
 	}
+
 	return nil
 
 }
@@ -50,22 +55,32 @@ func (s *Service) CreateShortUrl(ctx context.Context, req *pb.CreateShortUrlRequ
 		} else {
 			break
 		}
-
 	}
+	go s.rdb.Set(ctx, shortID, req.OriginalUrl, 0) //we can ignore error ig
+
 	return &pb.CreateShortUrlResponse{
 		ShortUrl: shortID,
 	}, nil
 }
 
 func (s *Service) GetOriginalUrl(ctx context.Context, req *pb.GetOriginalUrlRequest) (*pb.GetOriginalUrlResponse, error) {
-	Row := s.pool.QueryRow(ctx, "SELECT original_url FROM urls WHERE short_code = $1", req.ShortUrl)
 	var originalUrl string
+	originalUrl, err := s.rdb.Get(ctx, req.ShortUrl).Result()
+	if err == nil {
+		return &pb.GetOriginalUrlResponse{
+			OriginalUrl: originalUrl,
+		}, nil
+	}
+	if err != redis.Nil {
+		log.Print("redis down ", err)
+	}
+	Row := s.pool.QueryRow(ctx, "SELECT original_url FROM urls WHERE short_code = $1", req.ShortUrl)
 
-	err := Row.Scan(&originalUrl)
+	err = Row.Scan(&originalUrl)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "data not found for the url : %s", req.ShortUrl)
 	}
-
+	go s.rdb.Set(ctx, req.ShortUrl, originalUrl, 0)
 	return &pb.GetOriginalUrlResponse{
 		OriginalUrl: originalUrl,
 	}, nil

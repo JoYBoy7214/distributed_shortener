@@ -9,6 +9,7 @@ import (
 	pb "github.com/JoYBoy7214/distributed_shortener/api/proto/v1"
 	service "github.com/JoYBoy7214/distributed_shortener/internal/shortener"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 )
 
@@ -22,7 +23,13 @@ func main() {
 	dbUrl = os.Getenv("DB_URL")
 	s := grpc.NewServer()
 	pool, err := pgxpool.New(context.Background(), dbUrl)
-	server := service.NewService(pool)
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+
+	server := service.NewService(pool, rdb)
 	server.CreateUrlTable()
 	pb.RegisterShortenerServer(s, server)
 	log.Println("server started on 50051")
