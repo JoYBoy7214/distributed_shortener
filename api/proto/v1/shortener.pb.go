@@ -205,6 +205,50 @@ func (x *GetOriginalUrlResponse) GetOriginalUrl() string {
 	return ""
 }
 
+type GetClickCountResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClickCount    int64                  `protobuf:"varint,1,opt,name=click_count,json=clickCount,proto3" json:"click_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetClickCountResponse) Reset() {
+	*x = GetClickCountResponse{}
+	mi := &file_shortener_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetClickCountResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetClickCountResponse) ProtoMessage() {}
+
+func (x *GetClickCountResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_shortener_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetClickCountResponse.ProtoReflect.Descriptor instead.
+func (*GetClickCountResponse) Descriptor() ([]byte, []int) {
+	return file_shortener_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GetClickCountResponse) GetClickCount() int64 {
+	if x != nil {
+		return x.ClickCount
+	}
+	return 0
+}
+
 var File_shortener_proto protoreflect.FileDescriptor
 
 const file_shortener_proto_rawDesc = "" +
@@ -218,10 +262,14 @@ const file_shortener_proto_rawDesc = "" +
 	"\x15GetOriginalUrlRequest\x12\x1b\n" +
 	"\tshort_url\x18\x01 \x01(\tR\bshortUrl\";\n" +
 	"\x16GetOriginalUrlResponse\x12!\n" +
-	"\foriginal_url\x18\x01 \x01(\tR\voriginalUrl2\xb9\x01\n" +
+	"\foriginal_url\x18\x01 \x01(\tR\voriginalUrl\"8\n" +
+	"\x15GetClickCountResponse\x12\x1f\n" +
+	"\vclick_count\x18\x01 \x01(\x03R\n" +
+	"clickCount2\x8e\x02\n" +
 	"\tShortener\x12U\n" +
 	"\x0eCreateShortUrl\x12 .shortener.CreateShortUrlRequest\x1a!.shortener.CreateShortUrlResponse\x12U\n" +
-	"\x0eGetOriginalUrl\x12 .shortener.GetOriginalUrlRequest\x1a!.shortener.GetOriginalUrlResponseB:Z8github.com/JoYBoy7214/distributed_shortener/api/proto/v1b\x06proto3"
+	"\x0eGetOriginalUrl\x12 .shortener.GetOriginalUrlRequest\x1a!.shortener.GetOriginalUrlResponse\x12S\n" +
+	"\rGetClickCount\x12 .shortener.GetOriginalUrlRequest\x1a .shortener.GetClickCountResponseB:Z8github.com/JoYBoy7214/distributed_shortener/api/proto/v1b\x06proto3"
 
 var (
 	file_shortener_proto_rawDescOnce sync.Once
@@ -235,20 +283,23 @@ func file_shortener_proto_rawDescGZIP() []byte {
 	return file_shortener_proto_rawDescData
 }
 
-var file_shortener_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_shortener_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_shortener_proto_goTypes = []any{
 	(*CreateShortUrlRequest)(nil),  // 0: shortener.CreateShortUrlRequest
 	(*CreateShortUrlResponse)(nil), // 1: shortener.CreateShortUrlResponse
 	(*GetOriginalUrlRequest)(nil),  // 2: shortener.GetOriginalUrlRequest
 	(*GetOriginalUrlResponse)(nil), // 3: shortener.GetOriginalUrlResponse
+	(*GetClickCountResponse)(nil),  // 4: shortener.GetClickCountResponse
 }
 var file_shortener_proto_depIdxs = []int32{
 	0, // 0: shortener.Shortener.CreateShortUrl:input_type -> shortener.CreateShortUrlRequest
 	2, // 1: shortener.Shortener.GetOriginalUrl:input_type -> shortener.GetOriginalUrlRequest
-	1, // 2: shortener.Shortener.CreateShortUrl:output_type -> shortener.CreateShortUrlResponse
-	3, // 3: shortener.Shortener.GetOriginalUrl:output_type -> shortener.GetOriginalUrlResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	2, // 2: shortener.Shortener.GetClickCount:input_type -> shortener.GetOriginalUrlRequest
+	1, // 3: shortener.Shortener.CreateShortUrl:output_type -> shortener.CreateShortUrlResponse
+	3, // 4: shortener.Shortener.GetOriginalUrl:output_type -> shortener.GetOriginalUrlResponse
+	4, // 5: shortener.Shortener.GetClickCount:output_type -> shortener.GetClickCountResponse
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -265,7 +316,7 @@ func file_shortener_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_shortener_proto_rawDesc), len(file_shortener_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

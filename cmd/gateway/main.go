@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	pb "github.com/JoYBoy7214/distributed_shortener/api/proto/v1"
 	"google.golang.org/grpc"
@@ -19,6 +20,12 @@ type ShortUrlRequest struct {
 }
 type ShortUrlResponse struct {
 	ShortUrl string `json:"ShortUrl"`
+}
+type ClickCountRequst struct {
+	ShortUrl string `json:"ShortUrl"`
+}
+type ClickCountResponse struct {
+	Count int `json:"count"`
 }
 
 func submitHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,13 +57,15 @@ func postSubmitHandler(w http.ResponseWriter, r *http.Request) {
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
 
 	shortUrl := r.PathValue("shortId")
-	//fmt.Println(shortUrl)
+	fmt.Println("the short url is")
+	fmt.Println(shortUrl)
 	res, err := client.GetOriginalUrl(r.Context(), &pb.GetOriginalUrlRequest{
 		ShortUrl: shortUrl,
 	})
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok && st.Code() == codes.NotFound {
+			fmt.Println("URL not found")
 			http.Error(w, "URL not found", http.StatusNotFound)
 			return
 		}
@@ -68,12 +77,37 @@ func redirectHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, res.OriginalUrl, http.StatusSeeOther)
 
 }
+func countHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
+	var msg ClickCountRequst
+	err := json.NewDecoder(r.Body).Decode(&msg)
+	fmt.Println("countHandler")
+	if err != nil {
+		http.Error(w, "error in decoding the incoming request", http.StatusBadRequest)
+	}
+	clientReq := pb.GetOriginalUrlRequest{
+		ShortUrl: msg.ShortUrl,
+	}
+	res, err := client.GetClickCount(r.Context(), &clientReq)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var clientRes ClickCountResponse
+	clientRes.Count = int(res.ClickCount)
+	fmt.Println(clientRes)
+	json.NewEncoder(w).Encode(clientRes)
+
+}
 
 var client pb.ShortenerClient
 
 func main() {
-
-	conn, err := grpc.NewClient(":50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	shortenerAddr := os.Getenv("SHORTENER_SERVICE_ADDR")
+	if shortenerAddr == "" {
+		shortenerAddr = ":50051"
+	}
+	conn, err := grpc.NewClient(shortenerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal("error in creating a grpc client", err)
 		return
@@ -83,6 +117,7 @@ func main() {
 
 	http.HandleFunc("/submit", submitHandler)
 	http.HandleFunc("/{shortId}", redirectHandler)
+	http.HandleFunc("/count", countHandler)
 	fmt.Println("http server starts at 8080")
 	http.ListenAndServe(":8080", nil)
 

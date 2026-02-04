@@ -2,9 +2,11 @@ package shortener
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/rand"
 	"strings"
+	"sync"
 	"time"
 
 	pb "github.com/JoYBoy7214/distributed_shortener/api/proto/v1"
@@ -16,28 +18,37 @@ import (
 
 type Service struct {
 	pb.UnimplementedShortenerServer
-	pool *pgxpool.Pool
-	rdb  *redis.Client
+	pool        *pgxpool.Pool
+	rdb         *redis.Client
+	messageChan chan string
+	Wtg         sync.WaitGroup
 }
 
+const bufferSize int = 500
+
 func NewService(pool *pgxpool.Pool, rdb *redis.Client) *Service {
+	c := make(chan string, bufferSize)
 	return &Service{
-		pool: pool,
-		rdb:  rdb,
+		pool:        pool,
+		rdb:         rdb,
+		messageChan: c,
 	}
 }
 func (s *Service) CreateUrlTable() error {
-	_, err := s.pool.Exec(context.Background(), "CREATE TABLE IF NOT EXISTS urls(id SERIAL UNIQUE,short_code VARCHAR(10) PRIMARY KEY UNIQUE NOT NULL,original_url TEXT NOT NULL)")
+
+	_, err := s.pool.Exec(context.Background(), "CREATE TABLE IF NOT EXISTS urls(id SERIAL UNIQUE,short_code VARCHAR(10) PRIMARY KEY UNIQUE NOT NULL,original_url TEXT NOT NULL,click_count INTEGER DEFAULT 0)")
+
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to create the url table")
 	}
-
+	fmt.Println("Data base created")
 	return nil
 
 }
 func (s *Service) CreateShortUrl(ctx context.Context, req *pb.CreateShortUrlRequest) (*pb.CreateShortUrlResponse, error) {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+	fmt.Println("end point is working")
 	var shortID string
 	for i := 0; i < 5; i++ {
 		b := make([]byte, 10)
@@ -64,6 +75,11 @@ func (s *Service) CreateShortUrl(ctx context.Context, req *pb.CreateShortUrlRequ
 }
 
 func (s *Service) GetOriginalUrl(ctx context.Context, req *pb.GetOriginalUrlRequest) (*pb.GetOriginalUrlResponse, error) {
+	select {
+	case s.messageChan <- req.ShortUrl:
+	default:
+		fmt.Println("buffer fulled")
+	}
 	var originalUrl string
 	originalUrl, err := s.rdb.Get(ctx, req.ShortUrl).Result()
 	if err == nil {
@@ -84,4 +100,47 @@ func (s *Service) GetOriginalUrl(ctx context.Context, req *pb.GetOriginalUrlRequ
 	return &pb.GetOriginalUrlResponse{
 		OriginalUrl: originalUrl,
 	}, nil
+}
+
+func (s *Service) GetClickCount(ctx context.Context, req *pb.GetOriginalUrlRequest) (*pb.GetClickCountResponse, error) {
+	var count int
+	Row := s.pool.QueryRow(ctx, "SELECT click_count from urls WHERE short_code= $1", req.ShortUrl)
+	err := Row.Scan(&count)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "data not found for the url ;%s", req.ShortUrl)
+	}
+	return &pb.GetClickCountResponse{
+		ClickCount: int64(count),
+	}, nil
+}
+
+func (s *Service) StartWorker() {
+	defer s.Wtg.Done()
+	fmt.Println("worker started")
+
+	for id := range s.messageChan {
+		d := time.Now().Add(500 * time.Millisecond)
+		ctx, cancel := context.WithDeadline(context.Background(), d)
+		defer cancel()
+		_, err := s.pool.Exec(ctx, "UPDATE urls SET click_count =click_count+1 WHERE short_code=$1", id)
+		if err != nil {
+			log.Println("error in updating the click count", err)
+		}
+		cancel()
+	}
+
+}
+
+func (s *Service) GraceFullShutdown() {
+	fmt.Println("1. Closing channel...")
+	close(s.messageChan)
+
+	fmt.Println("2. Waiting for worker...")
+	s.Wtg.Wait()
+
+	fmt.Println("3. Closing DB pool...")
+	s.pool.Close()
+
+	fmt.Println("4. Closing Redis...")
+	s.rdb.Close()
 }

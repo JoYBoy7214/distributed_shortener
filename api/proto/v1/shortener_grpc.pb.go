@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Shortener_CreateShortUrl_FullMethodName = "/shortener.Shortener/CreateShortUrl"
 	Shortener_GetOriginalUrl_FullMethodName = "/shortener.Shortener/GetOriginalUrl"
+	Shortener_GetClickCount_FullMethodName  = "/shortener.Shortener/GetClickCount"
 )
 
 // ShortenerClient is the client API for Shortener service.
@@ -29,6 +30,7 @@ const (
 type ShortenerClient interface {
 	CreateShortUrl(ctx context.Context, in *CreateShortUrlRequest, opts ...grpc.CallOption) (*CreateShortUrlResponse, error)
 	GetOriginalUrl(ctx context.Context, in *GetOriginalUrlRequest, opts ...grpc.CallOption) (*GetOriginalUrlResponse, error)
+	GetClickCount(ctx context.Context, in *GetOriginalUrlRequest, opts ...grpc.CallOption) (*GetClickCountResponse, error)
 }
 
 type shortenerClient struct {
@@ -59,12 +61,23 @@ func (c *shortenerClient) GetOriginalUrl(ctx context.Context, in *GetOriginalUrl
 	return out, nil
 }
 
+func (c *shortenerClient) GetClickCount(ctx context.Context, in *GetOriginalUrlRequest, opts ...grpc.CallOption) (*GetClickCountResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetClickCountResponse)
+	err := c.cc.Invoke(ctx, Shortener_GetClickCount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ShortenerServer is the server API for Shortener service.
 // All implementations must embed UnimplementedShortenerServer
 // for forward compatibility.
 type ShortenerServer interface {
 	CreateShortUrl(context.Context, *CreateShortUrlRequest) (*CreateShortUrlResponse, error)
 	GetOriginalUrl(context.Context, *GetOriginalUrlRequest) (*GetOriginalUrlResponse, error)
+	GetClickCount(context.Context, *GetOriginalUrlRequest) (*GetClickCountResponse, error)
 	mustEmbedUnimplementedShortenerServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedShortenerServer) CreateShortUrl(context.Context, *CreateShort
 }
 func (UnimplementedShortenerServer) GetOriginalUrl(context.Context, *GetOriginalUrlRequest) (*GetOriginalUrlResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetOriginalUrl not implemented")
+}
+func (UnimplementedShortenerServer) GetClickCount(context.Context, *GetOriginalUrlRequest) (*GetClickCountResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetClickCount not implemented")
 }
 func (UnimplementedShortenerServer) mustEmbedUnimplementedShortenerServer() {}
 func (UnimplementedShortenerServer) testEmbeddedByValue()                   {}
@@ -138,6 +154,24 @@ func _Shortener_GetOriginalUrl_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Shortener_GetClickCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOriginalUrlRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ShortenerServer).GetClickCount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Shortener_GetClickCount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ShortenerServer).GetClickCount(ctx, req.(*GetOriginalUrlRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Shortener_ServiceDesc is the grpc.ServiceDesc for Shortener service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var Shortener_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetOriginalUrl",
 			Handler:    _Shortener_GetOriginalUrl_Handler,
+		},
+		{
+			MethodName: "GetClickCount",
+			Handler:    _Shortener_GetClickCount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

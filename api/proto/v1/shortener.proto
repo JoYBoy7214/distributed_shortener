@@ -7,6 +7,7 @@ option go_package = "github.com/JoYBoy7214/distributed_shortener/api/proto/v1";
 service Shortener {
   rpc CreateShortUrl (CreateShortUrlRequest) returns (CreateShortUrlResponse);
   rpc GetOriginalUrl (GetOriginalUrlRequest) returns (GetOriginalUrlResponse);
+  rpc GetClickCount  (GetOriginalUrlRequest) returns (GetClickCountResponse);
 }
 
 message CreateShortUrlRequest {
@@ -24,4 +25,8 @@ message GetOriginalUrlRequest {
 
 message GetOriginalUrlResponse {
   string original_url = 1;
+}
+
+message GetClickCountResponse{
+  int64 click_count=1;
 }
