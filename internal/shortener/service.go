@@ -10,7 +10,7 @@ import (
 	"time"
 
 	pb "github.com/JoYBoy7214/distributed_shortener/api/proto/v1"
-	"github.com/jackc/pgx/v5/pgxpool"
+	repo "github.com/JoYBoy7214/distributed_shortener/internal/storage"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,7 +18,7 @@ import (
 
 type Service struct {
 	pb.UnimplementedShortenerServer
-	pool        *pgxpool.Pool
+	repo        repo.Repository
 	rdb         *redis.Client
 	messageChan chan string
 	Wtg         sync.WaitGroup
@@ -26,18 +26,17 @@ type Service struct {
 
 const bufferSize int = 500
 
-func NewService(pool *pgxpool.Pool, rdb *redis.Client) *Service {
+func NewService(pool repo.Repository, rdb *redis.Client) *Service {
 	c := make(chan string, bufferSize)
 	return &Service{
-		pool:        pool,
+		repo:        pool,
 		rdb:         rdb,
 		messageChan: c,
 	}
 }
 func (s *Service) CreateUrlTable() error {
 
-	_, err := s.pool.Exec(context.Background(), "CREATE TABLE IF NOT EXISTS urls(id SERIAL UNIQUE,short_code VARCHAR(10) PRIMARY KEY UNIQUE NOT NULL,original_url TEXT NOT NULL,click_count INTEGER DEFAULT 0)")
-
+	err := s.repo.CreateDb(context.Background())
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to create the url table")
 	}
@@ -56,7 +55,7 @@ func (s *Service) CreateShortUrl(ctx context.Context, req *pb.CreateShortUrlRequ
 			b[j] = charset[rng.Intn(len(charset))]
 		}
 		shortID = string(b)
-		_, err := s.pool.Exec(ctx, "INSERT INTO urls (short_code, original_url) VALUES ($1, $2)", shortID, req.OriginalUrl)
+		err := s.repo.SaveURL(ctx, shortID, req.OriginalUrl)
 		if err != nil {
 			if strings.Contains(err.Error(), "SQLSTATE 23505") && i != 4 {
 				continue
@@ -90,9 +89,7 @@ func (s *Service) GetOriginalUrl(ctx context.Context, req *pb.GetOriginalUrlRequ
 	if err != redis.Nil {
 		log.Print("redis down ", err)
 	}
-	Row := s.pool.QueryRow(ctx, "SELECT original_url FROM urls WHERE short_code = $1", req.ShortUrl)
-
-	err = Row.Scan(&originalUrl)
+	originalUrl, err = s.repo.GetURL(ctx, req.ShortUrl)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "data not found for the url : %s", req.ShortUrl)
 	}
@@ -103,9 +100,7 @@ func (s *Service) GetOriginalUrl(ctx context.Context, req *pb.GetOriginalUrlRequ
 }
 
 func (s *Service) GetClickCount(ctx context.Context, req *pb.GetOriginalUrlRequest) (*pb.GetClickCountResponse, error) {
-	var count int
-	Row := s.pool.QueryRow(ctx, "SELECT click_count from urls WHERE short_code= $1", req.ShortUrl)
-	err := Row.Scan(&count)
+	count, err := s.repo.GetClickCount(ctx, req.ShortUrl)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "data not found for the url ;%s", req.ShortUrl)
 	}
@@ -121,8 +116,7 @@ func (s *Service) StartWorker() {
 	for id := range s.messageChan {
 		d := time.Now().Add(500 * time.Millisecond)
 		ctx, cancel := context.WithDeadline(context.Background(), d)
-		defer cancel()
-		_, err := s.pool.Exec(ctx, "UPDATE urls SET click_count =click_count+1 WHERE short_code=$1", id)
+		err := s.repo.IncrementClick(ctx, id)
 		if err != nil {
 			log.Println("error in updating the click count", err)
 		}
@@ -139,7 +133,7 @@ func (s *Service) GraceFullShutdown() {
 	s.Wtg.Wait()
 
 	fmt.Println("3. Closing DB pool...")
-	s.pool.Close()
+	s.repo.Close()
 
 	fmt.Println("4. Closing Redis...")
 	s.rdb.Close()

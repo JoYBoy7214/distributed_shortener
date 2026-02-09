@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	pb "github.com/JoYBoy7214/distributed_shortener/api/proto/v1"
 	service "github.com/JoYBoy7214/distributed_shortener/internal/shortener"
-	"github.com/jackc/pgx/v5/pgxpool"
+	db "github.com/JoYBoy7214/distributed_shortener/internal/storage/postgres"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 )
@@ -29,8 +32,11 @@ func main() {
 	}
 	fmt.Println(dbUrl)
 
-	s := grpc.NewServer()
-	pool, err := pgxpool.New(context.Background(), dbUrl)
+	s := grpc.NewServer(
+		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
+		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
+	)
+	pool, err := db.NewPostgresStore(dbUrl)
 	redisAddr := os.Getenv("REDIS_ADDR")
 	if redisAddr == "" {
 		redisAddr = "localhost:6379"
@@ -44,16 +50,25 @@ func main() {
 	defer stop()
 
 	server := service.NewService(pool, rdb)
+
 	server.CreateUrlTable()
 	server.Wtg.Add(1)
 	go server.StartWorker()
 	pb.RegisterShortenerServer(s, server)
+	grpc_prometheus.Register(s)
+	grpc_prometheus.EnableHandlingTimeHistogram()
 	go func(s *grpc.Server, ln net.Listener) {
 		log.Println("server started on 50051")
 		if err := s.Serve(ln); err != nil {
 			log.Println("failed to start grpc server")
 		}
 	}(s, ln)
+	// Start Metrics Server
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		fmt.Println("Metrics server started on :9090")
+		http.ListenAndServe(":9090", nil)
+	}()
 	select {
 	case <-ctx.Done():
 		s.GracefulStop()

@@ -24,6 +24,7 @@ services:
       dockerfile: deployments/Dockerfile.shortener
     ports:
       - "50051:50051"
+      - "9090:9090"
     env_file:
       - shortener.env
     depends_on:
@@ -41,5 +42,22 @@ services:
       - gateway.env
     depends_on:
       - shortener
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9091:9090" 
+    depends_on:
+      - shortener
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+
 volumes:
   db-data: 

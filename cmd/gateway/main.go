@@ -104,7 +104,7 @@ var client pb.ShortenerClient
 
 func main() {
 	shortenerAddr := os.Getenv("SHORTENER_SERVICE_ADDR")
-	if shortenerAddr == "" {
+	if shortenerAddr == "localhost:50051" {
 		shortenerAddr = ":50051"
 	}
 	conn, err := grpc.NewClient(shortenerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
