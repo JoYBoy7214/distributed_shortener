@@ -24,7 +24,7 @@ Service -->|Persist| DB[("PostgreSQL")]
 end
 subgraph Async_Analytics [Async Analytics]
 Service -->|Buffered Channel| Worker["Worker Pool"]
-Worker -->|Batch Update| DB
+Worker -->|Update| DB
 end
 subgraph Observability_Layer [Observability]
 Prometheus -->|"Scrape /metrics"| Service
