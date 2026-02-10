@@ -48,6 +48,7 @@ end
 
 ## 🚀 Performance Benchmarks
 The system was stress-tested using **k6** to validate the high-performance gRPC and Redis caching layers.
+
 WRITE TEST
 | Metric | Result |
 | :--- | :--- |
