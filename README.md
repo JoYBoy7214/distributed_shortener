@@ -100,7 +100,7 @@ Shorten a URL:
 
 ```bash
 curl -X POST http://localhost:8080/submit \
-  -d '{"OriginalUrl": "[https://google.com](https://google.com)", "UserId": "user_1"}'
+  -d '{"OriginalUrl": "https://google.com", "UserId": "user_1"}'
 ```
 Access a Short URL (Redirect):
 
