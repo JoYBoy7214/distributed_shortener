@@ -57,8 +57,8 @@ func postSubmitHandler(w http.ResponseWriter, r *http.Request) {
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
 
 	shortUrl := r.PathValue("shortId")
-	fmt.Println("the short url is")
-	fmt.Println(shortUrl)
+	//fmt.Println("the short url is")
+	//fmt.Println(shortUrl)
 	res, err := client.GetOriginalUrl(r.Context(), &pb.GetOriginalUrlRequest{
 		ShortUrl: shortUrl,
 	})
@@ -73,7 +73,7 @@ func redirectHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(res.OriginalUrl)
+	//fmt.Println(res.OriginalUrl)
 	http.Redirect(w, r, res.OriginalUrl, http.StatusSeeOther)
 
 }
@@ -81,7 +81,7 @@ func countHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 	var msg ClickCountRequst
 	err := json.NewDecoder(r.Body).Decode(&msg)
-	fmt.Println("countHandler")
+	//fmt.Println("countHandler")
 	if err != nil {
 		http.Error(w, "error in decoding the incoming request", http.StatusBadRequest)
 	}

@@ -47,7 +47,7 @@ func (s *Service) CreateUrlTable() error {
 func (s *Service) CreateShortUrl(ctx context.Context, req *pb.CreateShortUrlRequest) (*pb.CreateShortUrlResponse, error) {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
-	fmt.Println("end point is working")
+	//fmt.Println("end point is working")
 	var shortID string
 	for i := 0; i < 5; i++ {
 		b := make([]byte, 10)
@@ -77,7 +77,7 @@ func (s *Service) GetOriginalUrl(ctx context.Context, req *pb.GetOriginalUrlRequ
 	select {
 	case s.messageChan <- req.ShortUrl:
 	default:
-		fmt.Println("buffer fulled")
+		//fmt.Println("buffer fulled")
 	}
 	var originalUrl string
 	originalUrl, err := s.rdb.Get(ctx, req.ShortUrl).Result()

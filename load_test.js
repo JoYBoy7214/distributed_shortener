@@ -23,7 +23,7 @@ export default function () {
   
   const res = http.post('http://localhost:8080/submit', payload, params);
 
-  
+ // console.log(JSON.parse(res.body))
   check(res, {
     'is status 200': (r) => r.status === 200,
   });

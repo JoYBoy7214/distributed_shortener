@@ -46,6 +46,25 @@ end
 
 **Containerization**: Full Docker Compose setup for one-command deployment.
 
+## 🚀 Performance Benchmarks
+The system was stress-tested using **k6** to validate the high-performance gRPC and Redis caching layers.
+WRITE TEST
+| Metric | Result |
+| :--- | :--- |
+| **Throughput** | **7727.905 req/s** |
+| **Success Rate** | 100% (0 errors) |
+| **Avg Latency** | 12.81 ms |
+| **P95 Latency** | 23.74 ms |
+
+READ TEST
+| Metric | Result |
+| :--- | :--- |
+| **Throughput** | **12210.508 req/s** |
+| **Success Rate** | 100% (0 errors) |
+| **Avg Latency** | 8.000 ms |
+| **P95 Latency** | 17.36 ms |
+> Results based on a 30s test with 100 concurrent Virtual Users (VUs).
+
 ## 🛠 Tech Stack
 **Language**: Go (Golang)
 
