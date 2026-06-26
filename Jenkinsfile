@@ -1,32 +1,36 @@
 pipeline {
     agent any
-    stages{
-        stage('code quality and testing'){
-            step{
-                dir('internal/shortener'){
-                sh 'go test -v'
-            }
+    
+    stages {
+        stage('Code Quality and Testing') {
+            steps {
+                // Using ./... at the root level tells Go to find and run tests in ALL folders
+                sh 'go test -v ./...'
             }
         }
-        stage('build'){
-            step{
-                dir('deployments'){
-                sh 'docker compose build '
+        
+        stage('Build Docker Images') {
+            steps {
+                dir('deployments') {
+                    sh 'docker compose build'
+                }
             }
-            }   
         }
-        stage('deploy'){
-            step{
-                 dir('deployments'){
-                sh 'docker compose up -d'
-            }
+        
+        stage('Deploy Services') {
+            steps {
+                dir('deployments') {
+                    // The -d flag is CRITICAL. It runs containers in the background (detached mode)
+                    sh 'docker compose up -d'
+                }
             }
         }
     }
 
     post {
         always {
-            echo 'Pipeline finished.'
+            echo 'Pipeline finished. Cleaning up unused Docker artifacts...'
+            // The -f flag forces the prune, bypassing the (y/n) user prompt
             sh 'docker system prune -f'
         }
         success {
