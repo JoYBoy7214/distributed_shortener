@@ -3,7 +3,6 @@ package shortener
 import (
 	"context"
 	"fmt"
-	"log"
 	"testing"
 
 	pb "github.com/JoYBoy7214/distributed_shortener/api/proto/v1"
@@ -38,16 +37,16 @@ func TestCreateShortUrl(t *testing.T) {
 	resp, err := svc.CreateShortUrl(context.Background(), req)
 
 	if err != nil {
-		log.Fatal("test failed")
+		t.Error("test failed")
 	}
 	if len(resp.ShortUrl) > 0 {
 		fmt.Println(resp.ShortUrl)
 	} else {
-		log.Fatal("test failed")
+		t.Error("test failed")
 	}
 	_, ok := mockStore.Db[resp.ShortUrl]
 	if !ok {
-		log.Fatal("test failed")
+		t.Error("test failed")
 	}
 	fmt.Println("Test Passed")
 
