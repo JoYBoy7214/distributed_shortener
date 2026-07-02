@@ -7,7 +7,7 @@ pipeline {
                 withCredentials([
                     file(credentialsId: 'Distributed_url_shortener_DB_ENV', variable: 'DB_env'),
                     file(credentialsId: 'Distributed_url_shortener_Gateway_env', variable: 'Gateway_env'),
-                    file(credentialsId: 'Distributed_url_shortener_shortener_env', variable: 'Shortener_env'),
+                    file(credentialsId: 'Distributed_url_shortener_shortener_env', variable: 'shortener_env'),
                 ]){
                     script{
                         echo 'Placing .env files in required directory'
