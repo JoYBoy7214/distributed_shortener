@@ -2,6 +2,22 @@ pipeline {
     agent any
     
     stages {
+        stage('env placing'){
+            steps {
+                withCredentials([
+                    file(credentialsId: 'Distributed_url_shortener_DB_ENV', variable: 'DB_env'),
+                    file(credentialsId: 'Distributed_url_shortener_Gateway_env', variable: 'Gateway_env'),
+                    file(credentialsId: 'Distributed_url_shortener_shortener_env', variable: 'Shortener_env'),
+                ]){
+                    script{
+                        echo 'Placing .env files in required directory'
+                        sh "cp \$DB_env ./deployments/DB.env"
+                        sh "cp \$Gateway_env ./deployments/gateway.env"
+                        sh "cp \$Shortener_env ./deployments/Shortener.env"
+                    }
+                }
+            }
+        }
         stage('Code Quality and Testing') {
             steps {
                 // Using ./... at the root level tells Go to find and run tests in ALL folders
@@ -32,6 +48,7 @@ pipeline {
             echo 'Pipeline finished. Cleaning up unused Docker artifacts...'
             // The -f flag forces the prune, bypassing the (y/n) user prompt
             sh 'docker system prune -f'
+            sh 'rm -rf'
         }
         success {
             echo 'DEPLOYMENT SUCCESSFUL: URL Shortener is live!'
