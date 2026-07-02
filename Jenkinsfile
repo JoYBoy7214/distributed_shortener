@@ -13,7 +13,7 @@ pipeline {
                         echo 'Placing .env files in required directory'
                         sh "cp \$DB_env ./deployments/DB.env"
                         sh "cp \$Gateway_env ./deployments/gateway.env"
-                        sh "cp \$Shortener_env ./deployments/Shortener.env"
+                        sh "cp \$shortener_env ./deployments/shortener.env"
                     }
                 }
             }
