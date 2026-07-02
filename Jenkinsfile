@@ -38,6 +38,7 @@ pipeline {
                 dir('deployments') {
                     // The -d flag is CRITICAL. It runs containers in the background (detached mode)
                     sh 'docker compose up -d'
+                    
                 }
             }
         }
@@ -48,7 +49,7 @@ pipeline {
             echo 'Pipeline finished. Cleaning up unused Docker artifacts...'
             // The -f flag forces the prune, bypassing the (y/n) user prompt
             sh 'docker system prune -f'
-            sh 'rm -rf'
+            sh 'rm -rf ./deployments/DB.env ./deployments/gateway.env ./deployments/Shortener.env'
         }
         success {
             echo 'DEPLOYMENT SUCCESSFUL: URL Shortener is live!'
