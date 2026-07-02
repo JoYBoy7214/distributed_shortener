@@ -48,8 +48,9 @@ pipeline {
         always {
             echo 'Pipeline finished. Cleaning up unused Docker artifacts...'
             // The -f flag forces the prune, bypassing the (y/n) user prompt
+            sh 'docker compose down'
             sh 'docker system prune -f'
-            sh 'rm -rf ./deployments/DB.env ./deployments/gateway.env ./deployments/Shortener.env'
+            sh 'rm -rf ./deployments/DB.env ./deployments/gateway.env ./deployments/shortener.env'
         }
         success {
             echo 'DEPLOYMENT SUCCESSFUL: URL Shortener is live!'
