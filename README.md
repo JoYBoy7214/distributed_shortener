@@ -139,3 +139,5 @@ URL shorteners have a high Read-to-Write ratio. Redis sits in front of Postgres 
 Why gRPC?
 
 Internal communication between the Gateway and Service needs to be fast and type-safe. Protobuf contracts ensure strict interface adherence between services.
+
+
