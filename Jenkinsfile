@@ -48,7 +48,7 @@ pipeline {
         always {
             echo 'Pipeline finished. Cleaning up unused Docker artifacts...'
             dir('deployments') {
-                sh 'docker compose down'
+                sh 'docker compose down' 
             }
             sh 'docker system prune -f'
             sh 'rm -rf ./deployments/DB.env ./deployments/gateway.env ./deployments/shortener.env'
