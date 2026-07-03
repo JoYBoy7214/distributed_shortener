@@ -64,4 +64,8 @@ pipeline {
             echo 'DEPLOYMENT FAILED: Check logs. Stack was not updated.'
         }
     }
+
+    
 }
+
+
