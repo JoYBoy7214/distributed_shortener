@@ -34,6 +34,10 @@ pipeline {
         }
         
         stage('Deploy Services') {
+            //depoly only if the work is in main branch 
+            when{
+                branch 'main'
+            }
             steps {
                 dir('deployments') {
                     // The -d flag is CRITICAL. It runs containers in the background (detached mode)
