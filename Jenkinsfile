@@ -57,16 +57,21 @@ pipeline {
             sh 'rm -rf ./deployments/DB.env ./deployments/gateway.env ./deployments/shortener.env'
         }
         success {
-            echo 'DEPLOYMENT SUCCESSFUL: URL Shortener is live!'
+            script {
+                echo 'pipeline executed successfully'
+            // Check the environment variable instead of using the 'when' syntax
+               if (env.BRANCH_NAME == 'main') {
+                   echo 'DEPLOYMENT SUCCESSFUL: URL Shortener is live!'
+                }
+            } 
+    }
         }
         failure {
             echo 'DEPLOYMENT FAILED: Check logs. Stack was not updated.'
         }
     }
 
-
-
     
-}
+
 
 
