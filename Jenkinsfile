@@ -1,6 +1,5 @@
 pipeline {
     agent any
-    
     stages {
         stage('env placing'){
             steps {
@@ -64,6 +63,8 @@ pipeline {
             echo 'DEPLOYMENT FAILED: Check logs. Stack was not updated.'
         }
     }
+
+
 
     
 }

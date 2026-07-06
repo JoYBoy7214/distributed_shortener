@@ -64,7 +64,7 @@ READ TEST
 | **Success Rate** | 100% (0 errors) |
 | **Avg Latency** | 8.000 ms |
 | **P95 Latency** | 17.36 ms |
-> Results based on a 30s test with 100 concurrent Virtual Users (VUs).
+> Results based on a 30s test with 100 concurrent Virtual Users (VUs) when database is unpopulated.
 
 ## 🛠 Tech Stack
 **Language**: Go (Golang)
@@ -139,7 +139,6 @@ URL shorteners have a high Read-to-Write ratio. Redis sits in front of Postgres 
 Why gRPC?
 
 Internal communication between the Gateway and Service needs to be fast and type-safe. Protobuf contracts ensure strict interface adherence between services.
-
 
 
 
