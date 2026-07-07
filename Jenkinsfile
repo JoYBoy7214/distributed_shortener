@@ -6,10 +6,10 @@ pipeline {
                 withCredentials([
                     file(credentialsId: 'Distributed_url_shortener_DB_ENV', variable: 'DB_env'),
                     file(credentialsId: 'Distributed_url_shortener_Gateway_env', variable: 'Gateway_env'),
-                    file(credentialsId: 'Distributed_url_shortener_shortener_env', variable: 'shortener_env'),
+                    file(credentialsId: 'Distributed_url_shortener_shortener_env', variable: 'shortener_env')
                 ]){
                     script{
-                        echo 'Placing .env files in required directory'
+                        echo 'Placing .env files in required directory...'
                         sh "cp \$DB_env ./deployments/DB.env"
                         sh "cp \$Gateway_env ./deployments/gateway.env"
                         sh "cp \$shortener_env ./deployments/shortener.env"
@@ -17,6 +17,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Code Quality and Testing') {
             steps {
                 // Using ./... at the root level tells Go to find and run tests in ALL folders
@@ -33,7 +34,7 @@ pipeline {
         }
         
         stage('Deploy Services') {
-            //depoly only if the work is in main branch 
+            // deploy only if the work is in main branch 
             when{
                 branch 'main'
             }
@@ -41,7 +42,6 @@ pipeline {
                 dir('deployments') {
                     // The -d flag is CRITICAL. It runs containers in the background (detached mode)
                     sh 'docker compose up -d'
-                    
                 }
             }
         }
@@ -58,20 +58,17 @@ pipeline {
         }
         success {
             script {
-                echo 'pipeline executed successfully'
-            // Check the environment variable instead of using the 'when' syntax
-               if (env.BRANCH_NAME == 'main') {
-                   echo 'DEPLOYMENT SUCCESSFUL: URL Shortener is live!'
+                echo 'Pipeline executed successfully.'
+                // Check the environment variable instead of using the 'when' syntax
+                if (env.BRANCH_NAME == 'main') {
+                    echo 'DEPLOYMENT SUCCESSFUL: URL Shortener is live!'
+                } else {
+                    echo 'PR VERIFIED: Ready for merge!'
                 }
             } 
-    }
         }
         failure {
             echo 'DEPLOYMENT FAILED: Check logs. No deployment.'
         }
     }
-
-    
-
-
-
+}
