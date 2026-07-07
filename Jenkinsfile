@@ -67,7 +67,7 @@ pipeline {
     }
         }
         failure {
-            echo 'DEPLOYMENT FAILED: Check logs. Stack was not updated.'
+            echo 'DEPLOYMENT FAILED: Check logs. No deployment.'
         }
     }
 
