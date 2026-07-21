@@ -1,7 +1,9 @@
 pipeline {
-    agent any
+    agent { 
+        label 'worker' 
+        }
     tools {
-        go 'go-1.22'
+        go 'Go 1.25.0'
     }
 
     stages {
