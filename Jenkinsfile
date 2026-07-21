@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    tools {
+    go 'go-1.22'
+    }
+
     stages {
         stage('env placing'){
             steps {
